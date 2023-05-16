@@ -7,7 +7,7 @@ A python script serving a Flask API that aggregates total lottery winnings from 
 3. Install requirements.txt `pip install -r requirements.txt`
 
 ## Setup the Flask API server using PM2
-`pm2 start <path-to-location>/lotto-aggregator/script.sh --interpreter= <path-to-location>/lotto-aggregatort/venv/bin/python3`
+`pm2 start <path-to-location>/lotto-aggregator/script.sh --interpreter=<path-to-location>/lotto-aggregatort/venv/bin/python3`
 
 ## Setup script.sh
 1. Fix permission `chmod +x <path-to-location>/lotto-aggregator/script.sh`
