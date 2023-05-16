@@ -1,5 +1,7 @@
 import json
+import datetime
 import pandas as pd
+from datetime import datetime
 from pandarallel import pandarallel
 from currency_converter import CurrencyConverter
 pandarallel.initialize(progress_bar=True)
@@ -55,34 +57,38 @@ def currency_converter(result):
         result = c.convert(float(result.replace('R','')), 'ZAR', 'USD')
     return result
 
-total = 0
-df = pd.read_csv('ltech_lotto.csv')
-df[['next_draw_date', 'estimated_jackpot','drawn_date','winning_numbers','bonus_numbers']] = df.parallel_apply(update_database, axis=1, result_type='expand')
+def main():
+    total = 0
+    df = pd.read_csv('ltech_lotto.csv')
+    df[['next_draw_date', 'estimated_jackpot','drawn_date','winning_numbers','bonus_numbers']] = df.parallel_apply(update_database, axis=1, result_type='expand')
 
-for result in df['estimated_jackpot'].unique():
-    if type(result) != float:
-        us_index = result.find("US$")
-        if us_index != -1:
-            substring = result[us_index+2:us_index+101]  # Extract up to 99 characters after "US$"
-            result = substring.replace(")", "")  # Remove ")" and convert to float
-            total += float(result.replace(',','').replace('$',''))
-        else:
-            result = result.replace(")", "")
-            if 'a month for 30 years' in result:
-                result = result.replace("a month for 30 years", "")
-                result_converted = currency_converter(result)
-                result = float(result_converted) * 12 * 30
-            elif 'a month for 20 years' in result:
-                result = result.replace("a month for 20 years", "")
-                result_converted = currency_converter(result)
-                result = float(result_converted) * 12 * 20
-            elif 'a day for life' in result:
-                result = result.replace("a day for life", "")
-                result_converted = currency_converter(result)
-                result = float(result_converted) * 365 * 30
+    for result in df['estimated_jackpot'].unique():
+        if type(result) != float:
+            us_index = result.find("US$")
+            if us_index != -1:
+                substring = result[us_index+2:us_index+101]  # Extract up to 99 characters after "US$"
+                result = substring.replace(")", "")  # Remove ")" and convert to float
+                total += float(result.replace(',','').replace('$',''))
             else:
-                result = currency_converter(result)
-            total += float(result)
-with open('total_winnings.json', 'w') as f:
-    json.dump({'total_lotto_winnings': total}, f)
+                result = result.replace(")", "")
+                if 'a month for 30 years' in result:
+                    result = result.replace("a month for 30 years", "")
+                    result_converted = currency_converter(result)
+                    result = float(result_converted) * 12 * 30
+                elif 'a month for 20 years' in result:
+                    result = result.replace("a month for 20 years", "")
+                    result_converted = currency_converter(result)
+                    result = float(result_converted) * 12 * 20
+                elif 'a day for life' in result:
+                    result = result.replace("a day for life", "")
+                    result_converted = currency_converter(result)
+                    result = float(result_converted) * 365 * 30
+                else:
+                    result = currency_converter(result)
+                total += float(result)
+    with open('total_winnings.json', 'w') as f:
+        date = datetime.now().strftime("%Y-%m-%d")
+        json.dump({'total_lotto_winnings': total, 'last_updated': date}, f)
 
+if __name__ == '__main__':
+    main()
